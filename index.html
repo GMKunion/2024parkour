@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跃动夏辉 | MC跑酷</title>
+    <style>
+        :root {
+            --primary-color: #FDC46B;
+            --secondary-color: #F9CDA3;
+            --hightlight-color: lightsalmon;
+            --avatar-accent-color: #fff;
+            --text-color: #000;
+            --search-text-color: rgba(0, 0, 0, 0.5);
+            --search-background-color: rgba(179, 179, 179, 0.08);
+            --layer-background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        * {
+            color: var(--text-color);
+            scrollbar-color: var(--secondary-color) rgba(0, 0, 0, 0);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-image: repeating-radial-gradient(circle at 10% 10%, #FDBE88, #FDC996 30%, #F9CDA3 30%, #F7D0A9 60%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, .4) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .4) 50%, rgba(255, 255, 255, .4) 75%, transparent 75%, transparent);
+            border-radius: 3em;
+        }
+
+        ::-webkit-scrollbar-track {
+            background-color: var(--secondary-color);
+            border-radius: 3em;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        dialog.modal {
+            border: none;
+            border-radius: 16px;
+            background-color: var(--layer-background-color);
+            backdrop-filter: blur(10px);
+            max-width: 83%;
+            box-shadow: 0 8px 16px #0005;
+        }
+
+        dialog.modal::backdrop {
+            background-color: var(--layer-background-color);
+        }
+
+        dialog div.dialog-content {
+            display: grid;
+            padding: 3vh 5vw;
+        }
+
+        dialog button.close-btn {
+            padding: 10px 20px;
+            outline: none;
+            border: none;
+            background-color: var(--hightlight-color);
+            font-size: 16px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        dialog button.close-btn:hover {
+            box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.2);
+        }
+
+        main.pane {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            width: 82vw;
+            height: 90vh;
+            padding: 10px;
+            background-color: var(--layer-background-color);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 16px #0005;
+        }
+
+        main.pane::before {
+            z-index: -1;
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            top: var(--y);
+            left: var(--x);
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.4), transparent);
+            transition: width .1s ease, height .1s ease;
+        }
+
+        main.pane:hover::before {
+            width: 120px;
+            height: 120px;
+        }
+
+        .header {
+            height: 10%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 36px;
+        }
+
+        .shell {
+            width: 95%;
+            max-height: calc(85% - 10px);
+            background-color: var(--layer-background-color);
+            margin: 8px auto;
+            border-radius: 10px;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* 奇数行背景色 */
+        tr:nth-child(odd) {
+            background-color: rgba(0, 0, 0, 0.04);
+        }
+
+        tr:hover {
+            box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.2);
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            pointer-events: none;
+            font-weight: bold;
+            background-color: rgba(120, 120, 120, 0.1);
+        }
+
+        td:nth-child(2) {
+            text-align: right;
+        }
+
+        td:nth-child(3) {
+            text-align: left;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 25%;
+            vertical-align: middle;
+            object-fit: cover;
+            border: 1.125px solid var(--avatar-accent-color);
+            transition: transform 0.3s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1);
+        }
+
+        .highlight {
+            background-color: var(--hightlight-color) !important;
+        }
+
+        #searchContainer {
+            display: flex;
+            max-height: 80%;
+            border-radius: 20px;
+            background-color: var(--search-background-color);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        #searchInput {
+            margin-right: 2px;
+            padding: 10px;
+            outline: none;
+            border: none;
+            color: var(--search-text-color);
+            background-color: var(--search-background-color);
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        #searchBtn {
+            width: 100%;
+            margin-left: 2px;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            color: var(--search-text-color);
+            background-color: var(--search-background-color);
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        #searchInput:hover,
+        #searchBtn:hover {
+            color: var(--text-color);
+        }
+
+        .footer {
+            font-size: 18px;
+            width: 90%;
+            background-color: var(--layer-background-color);
+            backdrop-filter: blur(10px);
+            padding: 30px 0;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 8px 16px #0005;
+        }
+
+        .footer-content {
+            padding: 0 50px;
+            display: grid;
+            grid-template-columns: 25% 50% 25%;
+        }
+
+        .footer-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+
+        .footer-menu li {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .footer-menu li:last-child {
+            margin-right: 0;
+        }
+
+        .footer-menu a {
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .footer-bottom {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .footer-bottom p {
+            margin: 0;
+        }
+
+        .thx-list {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px 10px 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .thx-list-item {
+            overflow: hidden;
+            padding: 10px 20px;
+            margin: 15px 7px;
+            width: 20em;
+            height: 90px;
+            border-radius: 10px;
+            line-height: 17px;
+            background-color: var(--layer-background-color);
+            box-shadow: 0 8px 16px #0003;
+        }
+
+        .thx-list-item:hover {
+            box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.2);
+        }
+
+        .thx-item-icon {
+            float: left;
+            overflow: hidden;
+            margin: 15px 10px;
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            transition: all.5s;
+        }
+
+        .thx-item-icon:hover {
+            transform: rotate(360deg);
+        }
+
+        .thx-item-name {
+            padding: 16px 10px 0 0;
+            height: 25px;
+            font-weight: 700;
+            font-size: 1.43em
+        }
+
+        .thx-item-desc {
+            padding: 16px 10px 16px 0;
+            height: 50px;
+            font-size: .93em
+        }
+
+        @media only screen and (max-width: 734px) {
+            .header {
+                height: 20%;
+                flex-direction: column;
+            }
+
+            h2 {
+                font-size: 32px;
+            }
+
+            .footer-content {
+                grid-template-columns: repeat(1, 1fr);
+                row-gap: 20px;
+            }
+
+            .footer-menu {
+                text-align: left;
+            }
+
+            .footer-menu li {
+                display: block;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #385077;
+                --secondary-color: #415E8A;
+                --hightlight-color: rgba(100, 100, 255, 0.4);
+                --avatar-accent-color: rgb(150, 150, 150);
+                --text-color: #fff;
+                --search-text-color: rgba(255, 255, 255, 0.8);
+                --search-background-color: rgba(0, 0, 0, 0.1);
+                --layer-background-color: rgba(0, 0, 0, 0.3);
+            }
+
+            body {
+                background-image: repeating-radial-gradient(circle at 10% 10%, #29354E, #385077 30%, #415E8A 30%, #6483A9 60%);
+            }
+
+            main.pane::before {
+                background: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.2), transparent);
+            }
+
+            tr:nth-child(odd) {
+                background-color: rgba(255, 255, 255, 0.04);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="button"></div>
+        <div class="button"></div>
+        <div class="button"></div>
+    </div>
+
+    <dialog id="dialog-search-not-found" class="modal">
+        <div class="dialog-content">
+            <p>没有找到匹配的结果</p>
+            <button class="close-btn" onclick="document.getElementById('dialog-search-not-found').close()">好的</button>
+        </div>
+    </dialog>
+    <dialog id="dialog-thx" class="modal">
+        <h2>特邀服务器</h2>
+        <div class="thx-list">
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfMuD.jpeg" loading="lazy">
+                <div class="thx-item-name">MYF</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SflGO.jpeg" loading="lazy">
+                <div class="thx-item-name">Mik</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfZe9.jpeg" loading="lazy">
+                <div class="thx-item-name">WBBB</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfAW3.jpeg" loading="lazy">
+                <div class="thx-item-name">TDR</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfFPe.jpeg" loading="lazy">
+                <div class="thx-item-name">TRAL</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfrUv.jpeg" loading="lazy">
+                <div class="thx-item-name">粽子科技服务器</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfXsW.jpeg" loading="lazy">
+                <div class="thx-item-name">Redux</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfHpH.jpeg" loading="lazy">
+                <div class="thx-item-name">GMK_union</div>
+                <div class="thx-item-desc">生存服务器</div>
+            </div>
+        </div>
+        <h2>特邀团队</h2>
+        <div class="thx-list">
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfWVX.jpeg" loading="lazy">
+                <div class="thx-item-name">MineBBS</div>
+                <div class="thx-item-desc">特邀论坛</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/Sfmis.jpeg" loading="lazy">
+                <div class="thx-item-name">PixelBBS</div>
+                <div class="thx-item-desc">特邀论坛</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SfLFJ.jpeg" loading="lazy">
+                <div class="thx-item-name">我的世界暑假活动群</div>
+                <div class="thx-item-desc">假期活动群</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/Sffs5.jpeg" loading="lazy">
+                <div class="thx-item-name">MYF彩虹镇</div>
+                <div class="thx-item-desc">特邀游戏内城镇</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/Sfp8o.jpeg" loading="lazy">
+                <div class="thx-item-name">MYF摸鱼村</div>
+                <div class="thx-item-desc">特邀游戏内城镇</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/Sf3AA.jpeg" loading="lazy">
+                <div class="thx-item-name">GGTeam mc服务器</div>
+                <div class="thx-item-desc">寄了的生存服务器</div>
+            </div>
+        </div>
+        <h2>特邀嘉宾</h2>
+        <div class="thx-list">
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SmulD.jpeg" loading="lazy">
+                <div class="thx-item-name">zp</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SmoTH.jpeg" loading="lazy">
+                <div class="thx-item-name">Endercat</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SmbQO.jpeg" loading="lazy">
+                <div class="thx-item-name">Republic of Yimian</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SmK39.jpeg" loading="lazy">
+                <div class="thx-item-name">FRUITS_CANDY</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/Smsv3.jpeg" loading="lazy">
+                <div class="thx-item-name">光遇-风</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/Smh1e.jpeg" loading="lazy">
+                <div class="thx-item-name">ObcbO</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SmI0v.jpeg" loading="lazy">
+                <div class="thx-item-name">顾梵</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+            <div class="thx-list-item">
+                <img class="thx-item-icon" src="https://i0.imgs.ovh/2024/02/21/SmBXW.jpeg" loading="lazy">
+                <div class="thx-item-name">，</div>
+                <div class="thx-item-desc">特邀嘉宾</div>
+            </div>
+        </div>
+        <button class="close-btn" onclick="document.getElementById('dialog-thx').close()">好的</button>
+    </dialog>
+
+    <main class="pane">
+        <section class="header">
+            <h2>跑酷排名</h2>
+            <div id="searchContainer">
+                <input type="text" id="searchInput" placeholder="玩家 ID">
+                <button id="searchBtn">搜索</button>
+            </div>
+        </section>
+        <section class="shell">
+            <table id="rankings">
+                <tr>
+                    <th>排名</th>
+                    <th colspan="2">玩家 ID</th>
+                    <th>关卡数</th>
+                    <th>耗时</th>
+                    <th>死亡次数</th>
+                    <th>原始得分</th>
+                    <th>最终得分</th>
+                </tr>
+            </table>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                Logo
+            </div>
+            <div class="footer-links">
+                <ul class="footer-menu">
+                    <li><a href="/">首页</a></li>
+                    <li><a onclick="document.getElementById('dialog-thx').showModal()">感谢</a></li>
+                    <li><a href="https://www.bilibili.com/av170001">视频</a></li>
+                </ul>
+            </div>
+            <div class="footer-minecraft-ip">
+
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Minecraft Parkour. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const maxIndex = 6;
+        const availableIndex = [];
+        function avatarApi(index, name = "Steve") {
+            return [
+                `https://visage.surgeplay.com/face/128/${name}`,
+                `https://mc-heads.net/avatar/${name}`,
+                `https://minotar.net/helm/${name}/100.png`,
+                `https://skin.hypernite.com/avatar/${name}`,
+                `https://minepic.org/avatar/${name}`,
+                `https://starlightskins.lunareclipse.studio/skin-render/pixel/${name}/face`,
+                `https://cravatar.eu/helmavatar/${name}`
+            ][index];
+        }
+        function randomApi(name) {
+            const index = availableIndex[Math.floor(Math.random() * availableIndex.length)];
+            return avatarApi(index, name);
+        }
+        for (let i = 0; i < maxIndex; i++) {
+            fetch(avatarApi(i)).then((rep) => { if (rep.ok) { availableIndex.push(i) } });
+        }
+
+        const steve = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADQUlEQVR4nO3dLavlVRiH4WdkzxxHR0eDYrFpsBh8AZMzRoNJBLFa7IIfQrArdstgMAkmmSIWkSmCRrPgcd5fYPwKTng4nNvr+gA/Fpub1db+n3n9pWcfzilz4dzhpI/wv3Dj3oOV3TtLuzMzj60twwkQNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAialMPxjdsrwxcvnF/Zndl7jXwaX5Nv/RYzp/P3cEOTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJuVwdO7syvAnl95a2Z2ZeeH551Z2D088tbI7M/Pg1vWV3dt376/szswcH/+9svvV1Z9Xdmfc0MQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNypmvP3734cbwxYvPbMzOzMz5o52X6ps2X2efNluvyWfc0MQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJOWz93cAHX3yzsjsz8/7bn6/sfvjmryu7M3tP97///fLK7szMt1c/W9m98ulHK7szbmhiBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJuVUfrx+y4+//HbSR3hkl1975aSP8Mh8vB7+I0GTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmHm7durQzfuH9zZXdm5oefrq3svvriyyu7m7688t3a9nvvvLGy+8/N+yu7M25oYgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiblcDha+Xb9/HV972Xv3Tv3Vnav/fnHyu7M3pmPHj+3sjuz9zr76SfPruzOuKGJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBk/Iv+4ZYFEl12QgAAAAASUVORK5CYII=";
+        const alex = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADI0lEQVR4nO3dMa6VVRiG0e94fr2XxITSklY7YmUnHT1DsKGytnAaJoaGYTAES+zUio7CBgLByCWXYKETsPhC7pO1BvBm5+TJ7vZ/Ts8f3f8wG968XZmdmZnPL3d2N8+8Zeu3mNn7PRbP/MnaMnwEgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBk3LcxJe9N/HMf7/7a2X31srqf27g63o3NCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSjpv4VH3rzFufGpiZuX3vh7XtLe9++eljH+F/c0OTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCnH2kvnz3ZmZ2Zm6cybL7MvLi5Wdl+/ermyOzMzX3+3Mnt6+nhld8YNTYygSRE0KYImRdCkCJoUQZMiaFIETYqgSRE0KYImRdCkCJoUQZMiaFIETYqgSRE0KYImRdCkCJqU4/Kb71eGv7j7YGV3ZubLh1+t7P56f+dTAzMzc75cmf325x9Xdmdm/nj0+8runyur/3JDkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQpgiZF0KQImhRBkyJoUgRNiqBJETQppxe/PfmwMnz+dGN2ZmbOp5Ujr73MnpmZ9293dk/nnd2Zub6+Xtk9zqeV3Rk3NDGCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSBE2KoEkRNCmCJkXQpAiaFEGTImhSjuM4dpbPi38Ev/RJgPfPXq7sbjrfubW2vfW5gaurq5XdGTc0MYImRdCkCJoUQZMiaFIETYqgSRE0KYImRdCkCJoUQZMiaFIETYqgSRE0KYImRdCkCJoUQZOy9OR79v6sfWbtT+bPd1Zmdy39FpsuFj8I4IYmRdCkCJoUQZMiaFIETYqgSRE0KYImRdCkCJoUQZMiaFIETYqgSRE0KYImRdCkCJoUQZMiaFIETco/BQJBHq/hdPQAAAAASUVORK5CYII=";
+        function isSteve(uuidStr) {
+            const uuid = uuidStr.replace(/-/g, '');
+            const mostSigBits = BigInt('0x' + uuid.substring(0, 16));
+            const leastSigBits = BigInt('0x' + uuid.substring(16, 32));
+
+            const l1 = leastSigBits & BigInt(0xFFFFFFFF);
+            const l2 = (leastSigBits >> BigInt(32)) & BigInt(0xFFFFFFFF);
+            const m1 = mostSigBits & BigInt(0xFFFFFFFF);
+            const m2 = (mostSigBits >> BigInt(32)) & BigInt(0xFFFFFFFF);
+
+            const hash = Number((l1 ^ l2) ^ (m1 ^ m2));
+            return hash % 2 === 0;
+        }
+        function avatarReload(element) {
+            let retry = element.dataset.retry || 0;
+            if (retry > 0) {
+                const name = element.dataset.name;
+                let random;
+                while ((random = randomApi(name)) === element.src) { }
+                element.src = random;
+                element.dataset.retry = --retry;
+            } else {
+                element.onerror = null;
+                element.src = element.dataset.steve ? steve : alex;
+            }
+        }
+
+        // 光效
+        const pane = document.querySelector("main.pane");
+        pane.addEventListener("mousemove", e => {
+            let rect = pane.getBoundingClientRect();
+            let x = e.clientX - rect.left;// 鼠标距离浏览器左边的宽度 - 面板距离浏览器左边的宽度
+            let y = e.clientY - rect.top;// 鼠标距离浏览器上边的宽度 - 面板距离浏览器上边的宽度
+            pane.style.setProperty("--y", y + "px");
+            pane.style.setProperty("--x", x + "px");
+        });
+
+        // 搜索
+        const searchBtn = document.getElementById('searchBtn');
+        const searchInput = document.getElementById('searchInput');
+        searchInput.onkeypress = function (event) {
+            if (event.which === 13 /* enter */) {
+                search();
+            }
+        }
+        searchBtn.addEventListener('click', function () {
+            search();
+        });
+        function search() {
+            const rows = document.querySelectorAll('#rankings tr');
+            rows.forEach(row => {
+                row.classList.remove('highlight');
+            });
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            if (searchTerm) {
+                let found = false;
+
+                for (let i = 1; i < rows.length; i++) {
+                    const playerCell = rows[i].querySelector('td:nth-child(3)');
+
+                    if (playerCell.textContent.toLowerCase().includes(searchTerm)) {
+                        rows[i].classList.add('highlight');
+                        if (!found) {// 多结果时候 只跳转第一个
+                            rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        found = true;
+                    }
+                }
+
+                if (!found) {
+                    const dialog = document.getElementById("dialog-search-not-found");
+                    dialog.showModal();
+                }
+            }
+        }
+
+        function addStyleText(element, styleText) {
+            let style = document.createElement('style');
+            if (style.styleSheet) {
+                style.styleSheet.cssText = styleText;
+            } else {
+                style.appendChild(document.createTextNode(styleText));
+            }
+            element.appendChild(style);
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('./final_calculated_scores.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tableBody = document.getElementById('rankings');
+
+                    const dataArray = Object.values(data);// Firefox support
+                    dataArray.sort((a, b) => (b.finalScore - a.finalScore)
+                        || (b.rawScore - a.rawScore)
+                        || (b.level - a.level)
+                        || (b.time - a.time)
+                        || (b.deathCount - a.deathCount)
+                        || (b.name - a.name));
+
+                    let ranking = 0;// 排名序号 index+1不可信 因为可能有相同成绩
+                    let prevScore = 0;
+                    dataArray.forEach((player, index) => {
+                        const { name, level, time, deathCount } = player;
+                        const defaultAvatarType = isSteve(player.uuid);
+                        const avatar = player.online ? `<img class="avatar" src="${randomApi(name)}" alt="avatar" loading="lazy" data-name="${name}" data-steve="${defaultAvatarType}" data-retry=3 onerror="avatarReload(this)" onclick="this.dataset.retry=3;avatarReload(this);">`
+                            : `<img class="avatar" src="${defaultAvatarType ? steve : alex}" alt="avatar" loading="lazy">`;
+                        const rawScore = player.rawScore.toFixed(2);
+                        const finalScore = player.finalScore.toFixed(2);
+                        if (finalScore != prevScore) {
+                            prevScore = finalScore;
+                            ranking += 1;
+                        }
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${ranking}</td>
+                            <td>${avatar}</td>
+                            <td>${name}</td>
+                            <td>${level}</td>
+                            <td>${time}</td>
+                            <td>${deathCount}</td>
+                            <td>${rawScore}</td>
+                            <td>${finalScore}</td>
+                        `;
+                        // 前三名特殊样式
+                        if (ranking == 1) {
+                            addStyleText(tr, `tr:nth-child(${index + 2}) { background-color: rgba(253, 160, 136, 0.3) } @media (prefers-color-scheme: dark) { tr:nth-child(${index + 2}) { background-color: rgba(253, 160, 136, 0.2) } }`);
+                        } else if (ranking == 2) {
+                            addStyleText(tr, `tr:nth-child(${index + 2}) { background-color: rgba(253, 195, 136, 0.3) } @media (prefers-color-scheme: dark) { tr:nth-child(${index + 2}) { background-color: rgba(253, 195, 136, 0.2) } }`);
+                        } else if (ranking == 3) {
+                            addStyleText(tr, `tr:nth-child(${index + 2}) { background-color: rgba(253, 230, 136, 0.3) } @media (prefers-color-scheme: dark) { tr:nth-child(${index + 2}) { background-color: rgba(253, 230, 136, 0.2) } }`);
+                        }
+                        tableBody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('无法加载JSON', error);
+                    document.getElementById('rankings').innerHTML = '<tr><td>出现异常</td></tr>';
+                });
+        });
+    </script>
+</body>
+
+</html>
