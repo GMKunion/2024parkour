@@ -1,0 +1,26 @@
+[
+    {
+      "uuid": "6de9bf9f-05e1-423b-a908-ff662173eded",
+      "name": "ninjz1",
+      "created": "2019-04-03 23:31:15 +0000",
+      "source": "adi_rdi",
+      "expires": "forever",
+      "reason": "Banned by an operator."
+    },
+    {
+      "uuid": "884a0d8c-27fa-4824-b3ef-94f50ea94b5f",
+      "name": "list",
+      "created": "2019-04-08 04:29:40 +0000",
+      "source": "SwiftRaptor27",
+      "expires": "forever",
+      "reason": "Banned by an operator."
+    },
+    {
+      "uuid": "bca16304-a187-479b-85ee-9a981030f667",
+      "name": "adi_rdi",
+      "created": "2019-04-04 00:01:19 +0000",
+      "source": "SwiftRaptor27",
+      "expires": "forever",
+      "reason": "possbly ninjz1?"
+    }
+  ]
